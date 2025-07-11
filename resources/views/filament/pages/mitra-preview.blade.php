@@ -312,7 +312,7 @@
         {{-- BOQ Table dengan Fixed Width dan Horizontal Scroll --}}
         <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
             <div class="min-w-full" style="min-width: 1600px;">
-                <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="table-layout: fixed; width: 1600px;">
+                <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="table-layout: fixed; width: 1800px;">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 60px;">
@@ -323,6 +323,9 @@
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 80px;">
                                 STO
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 120px;">
+                                ID Project
                             </th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider" style="width: 120px;">
                                 SP Material
@@ -410,6 +413,11 @@
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" style="width: 80px;">
                                     {{ $row->sto }}
                                 </td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" style="width: 120px;">
+                                    <div class="truncate" title="{{ $row->id_project }}">
+                                        {{ $row->id_project ?? '-' }}
+                                    </div>
+                                </td>
                                 <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100 font-mono" style="width: 120px;">
                                     {{ number_format($row->sp_material ?? 0, 0, ',', '.') }}
                                 </td>
@@ -452,7 +460,7 @@
                     {{-- Total Footer --}}
                     <tfoot class="bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
                         <tr>
-                            <td colspan="3" class="px-4 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">
+                            <td colspan="4" class="px-4 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">
                                 GRAND TOTAL
                             </td>
                             <td class="px-4 py-4 text-sm text-right font-bold text-gray-900 dark:text-gray-100 font-mono" style="width: 120px;">
@@ -640,7 +648,7 @@
                             'excel.baqclulus' => ['label' => 'Excel BA QC Lulus', 'icon' => 'fas fa-file-excel'],
                             'excel.pemotongantagihan' => ['label' => 'Excel BA Lampiran Pemotongan tagihan', 'icon' => 'fas fa-file-excel'],
                             'excel.lampiranbarekontambahkurang' => ['label' => 'Excel Lampiran BA Rekon (Tambah Kurang)', 'icon' => 'fas fa-file-excel'],
-                            'excel.baperformansidanlampiranbarekongamas' => ['label' => 'Excel BA Performansi dan Lampiran BA Rekon (Gamas)', 'icon' => 'fas fa-file-excel'],
+                            'excel.resumebarekon' => ['label' => 'Excel Resume BA Rekon', 'icon' => 'fas fa-file-excel'],
                         ] as $slug => $info)
                             <a href="{{ route('mitra.export.' . $slug, $data->id) }}"
                                 class="btn-export btn-excel group block p-3 rounded-lg text-center transition-all duration-200 hover:scale-105">

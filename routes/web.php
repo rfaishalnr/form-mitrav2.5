@@ -38,7 +38,7 @@ Route::get('/export/excel/material/{id}', [ExcelExportController::class, 'export
 Route::get('/export/excel/baqclulus/{id}', [ExcelExportController::class, 'exportBaqclulus'])->name('mitra.export.excel.baqclulus');
 Route::get('/export/excel/pemotongantagihan/{id}', [ExcelExportController::class, 'exportPemotonganTagihan'])->name('mitra.export.excel.pemotongantagihan');
 Route::get('/export/excel/lampiranbarekontambahkurang/{id}', [ExcelExportController::class, 'exportLampiranBarekonTambahKurang'])->name('mitra.export.excel.lampiranbarekontambahkurang');
-Route::get('/export/excel/baperformansidanlampiranbarekongamas/{id}', [ExcelExportController::class, 'exportBaperformansidanlampiranbarekongamas'])->name('mitra.export.excel.baperformansidanlampiranbarekongamas');
+Route::get('/export/excel/resumebarekon/{id}', [ExcelExportController::class, 'exportResumeBarekon'])->name('mitra.export.excel.resumebarekon');
 
 
 Route::post('/boq/drop/{id}', [BoqExportController::class, 'dropBoq'])->name('boq.drop');

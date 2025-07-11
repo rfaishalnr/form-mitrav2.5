@@ -2,7 +2,6 @@
     $ppnPercent = $ppnPercent ?? 11;
     $droppedLocations = $droppedLocations ?? []; // Array untuk tracking lokasi yang di-drop
 @endphp
-
 <x-filament-panels::page>
     <style>
         .fi-ta-table {
@@ -12,7 +11,6 @@
             word-break: break-word;
         }
     </style>
-
     <div class="space-y-6">
         <!-- Form untuk pilih mitra -->
         <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
@@ -22,7 +20,6 @@
                 </form>
             </div>
         </div>
-
         <!-- Tabel Input BOQ -->
         @if ($this->showTable)
             <div
@@ -93,7 +90,6 @@
                                 Reset
                             </button>
                         </div>
-
                         <button wire:click="addRow" type="button"
                             class="fi-btn fi-btn-size-md fi-color-primary inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-50 focus-visible:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-400/10">
                             <svg class="fi-btn-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,8 +98,6 @@
                             </svg>
                             Tambah Baris
                         </button>
-
-                        
                         <button wire:click="submit" type="button"
                             class="fi-btn fi-btn-size-md fi-color-success inline-flex items-center justify-center gap-1.5 rounded-lg 
            bg-green-600 hover:bg-green-700 focus-visible:bg-green-700 active:bg-green-800
@@ -133,11 +127,10 @@
                         </button>
                     </div>
                 </div>
-
                 <!-- Tabel -->
                 <div class="fi-section-content overflow-x-auto">
                     <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5"
-                        style="min-width: 1400px;">
+                        style="min-width: 1520px;">
                         <thead class="divide-y divide-gray-200 dark:divide-white/5">
                             <tr class="bg-gray-50 dark:bg-white/5">
                                 <th rowspan="2"
@@ -149,6 +142,9 @@
                                 <th rowspan="2"
                                     class="fi-ta-header-cell px-3 py-3.5 text-center text-xs font-medium text-gray-950 dark:text-white border-r-4 border-gray-400 dark:border-gray-500"
                                     style="width: 80px;">STO</th>
+                                <th rowspan="2"
+                                    class="fi-ta-header-cell px-3 py-3.5 text-center text-xs font-medium text-gray-950 dark:text-white border-r-2 border-gray-300 dark:border-gray-600"
+                                    style="width: 200px;">ID Project</th>
                                 <th colspan="3"
                                     class="fi-ta-header-cell px-3 py-3.5 text-center text-xs font-medium text-info-600 dark:text-info-400 bg-success-50 dark:bg-success-400/10 border border-gray-400 dark:border-gray-500"
                                     style="width: 450px;">Nilai SP</th>
@@ -201,7 +197,6 @@
                                 <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
                                     <td class="fi-ta-cell px-3 py-4 text-center text-sm text-gray-950 dark:text-white border-r-2 border-gray-300 dark:border-gray-600"
                                         style="width: 60px;">{{ $row['no'] }}</td>
-
                                     <td class="fi-ta-cell px-2 py-2 border-r-2 border-gray-300 dark:border-gray-600"
                                         style="width: 200px;">
                                         <input type="text"
@@ -209,14 +204,18 @@
                                             class="fi-input block w-full rounded-lg border-none bg-transparent py-1.5 text-base text-gray-950 placeholder:text-gray-400 focus:ring-2 focus:ring-primary-600 dark:text-white dark:placeholder:text-gray-500 sm:text-sm"
                                             placeholder="Nama lokasi..." style="width: 100%;">
                                     </td>
-
                                     <td class="fi-ta-cell px-2 py-2 border-r-4 border-gray-400 dark:border-gray-500"
                                         style="width: 120px;">
                                         <input type="text" wire:model.defer="tableData.{{ $index }}.sto"
                                             class="fi-input block w-full rounded-lg border-none bg-transparent py-1.5 text-base text-gray-950 placeholder:text-gray-400 focus:ring-2 focus:ring-primary-600 dark:text-white dark:placeholder:text-gray-500 sm:text-sm"
                                             placeholder="STO..." style="width: 100%;">
                                     </td>
-
+                                    <td class="fi-ta-cell px-2 py-2 border-r-4 border-gray-400 dark:border-gray-500"
+                                        style="width: 200px;">
+                                        <input type="text" wire:model.defer="tableData.{{ $index }}.id_project"
+                                            class="fi-input block w-full rounded-lg border-none bg-transparent py-1.5 text-base text-gray-950 placeholder:text-gray-400 focus:ring-2 focus:ring-primary-600 dark:text-white dark:placeholder:text-gray-500 sm:text-sm"
+                                            placeholder="ID Project..." style="width: 100%;">
+                                    </td>
                                     <!-- SP -->
                                     <td class="fi-ta-cell px-2 py-2 border border-success-200 dark:border-success-600"
                                         style="width: 150px;">
@@ -237,7 +236,6 @@
                                         style="width: 150px;">
                                         {{ number_format(($row['sp_material'] ?? 0) + ($row['sp_jasa'] ?? 0), 0, ',', '.') }}
                                     </td>
-
                                     <!-- REKON -->
                                     <td class="fi-ta-cell px-2 py-2 border border-warning-200 dark:border-warning-600"
                                         style="width: 150px;">
@@ -259,7 +257,6 @@
                                         style="width: 150px;">
                                         {{ number_format(($row['rekon_material'] ?? 0) + ($row['rekon_jasa'] ?? 0), 0, ',', '.') }}
                                     </td>
-
                                     <!-- TAMBAH -->
                                     <td class="fi-ta-cell px-2 py-2 border border-info-200 dark:border-info-600"
                                         style="width: 150px;">
@@ -281,7 +278,6 @@
                                         style="width: 150px;">
                                         {{ number_format(($row['tambah_material'] ?? 0) + ($row['tambah_jasa'] ?? 0), 0, ',', '.') }}
                                     </td>
-
                                     <!-- KURANG -->
                                     <td class="fi-ta-cell px-2 py-2 border border-danger-200 dark:border-danger-600"
                                         style="width: 150px;">
@@ -303,17 +299,14 @@
                                         style="width: 150px;">
                                         {{ number_format(($row['kurang_material'] ?? 0) + ($row['kurang_jasa'] ?? 0), 0, ',', '.') }}
                                     </td>
-
                                     <td class="fi-ta-cell px-3 py-4" style="width: 100px;">
                                         <div class="flex items-center justify-center space-x-2">
-
                                             @php
                                                 $isDropped = in_array(
                                                     $row['nama_lokasi'] ?? '',
                                                     $droppedLocations ?? [],
                                                 );
                                             @endphp
-
 @if (!$isDropped && !empty($row['id']))
     {{-- Tombol Drop (versi PHP POST) --}}
     <form action="{{ route('boq.drop', $row['id']) }}"
@@ -335,8 +328,6 @@
 @elseif ($isDropped)
     <span class="text-xs text-red-600 font-semibold">[DROP]</span>
 @endif
-
-
                                             {{-- Tombol Hapus --}}
                                             <button wire:click="removeRow({{ $index }})" type="button"
                                                 class="fi-ac-btn-action inline-flex items-center justify-center rounded-lg outline-none transition duration-75 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-70 h-8 w-8 text-danger-500 hover:text-danger-600 focus-visible:ring-danger-600"
@@ -348,13 +339,10 @@
                                                         d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                                 </svg>
                                             </button>
-
                                         </div>
                                     </td>
-
                                 </tr>
                             @endforeach
-
                             <!-- Grand Total Row -->
                             @if (count($this->tableData) > 0)
                                 @php
@@ -368,7 +356,6 @@
                                         'kurang_material' => 0,
                                         'kurang_jasa' => 0,
                                     ];
-
                                     foreach ($this->tableData as $row) {
                                         $grandTotals['sp_material'] += $row['sp_material'] ?? 0;
                                         $grandTotals['sp_jasa'] += $row['sp_jasa'] ?? 0;
@@ -382,12 +369,11 @@
                                 @endphp
                                 <tr
                                     class="bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
-                                    <td colspan="3"
-                                        class="fi-ta-cell px-3 py-4 text-sm font-bold text-gray-950 dark:text-white border-r-4 border-gray-400 dark:border-gray-500"
-                                        style="text-align: center; width: auto;">
-                                        GRAND TOTAL
-                                    </td>
-
+                                    <td colspan="4"
+                                    class="fi-ta-cell px-3 py-4 text-sm font-bold text-gray-950 dark:text-white border-r-4 border-gray-400 dark:border-gray-500"
+                                    style="text-align: center; width: auto;">
+                                    GRAND TOTAL
+                                </td>
                                     <!-- SP Totals -->
                                     <td class="fi-ta-cell px-3 py-4 text-center text-sm font-bold text-success-700 dark:text-success-300 bg-success-100 dark:bg-success-400/20 border border-success-200 dark:border-success-600"
                                         style="width: 150px;">
@@ -401,7 +387,6 @@
                                         style="width: 150px;">
                                         {{ number_format($grandTotals['sp_material'] + $grandTotals['sp_jasa'], 0, ',', '.') }}
                                     </td>
-
                                     <!-- REKON Totals -->
                                     <td class="fi-ta-cell px-3 py-4 text-center text-sm font-bold text-warning-700 dark:text-warning-300 bg-warning-100 dark:bg-warning-400/20 border border-warning-200 dark:border-warning-600"
                                         style="width: 150px;">
@@ -415,7 +400,6 @@
                                         style="width: 150px;">
                                         {{ number_format($grandTotals['rekon_material'] + $grandTotals['rekon_jasa'], 0, ',', '.') }}
                                     </td>
-
                                     <!-- TAMBAH Totals -->
                                     <td class="fi-ta-cell px-3 py-4 text-center text-sm font-bold text-info-700 dark:text-info-300 bg-info-100 dark:bg-info-400/20 border border-info-200 dark:border-info-600"
                                         style="width: 150px;">
@@ -429,7 +413,6 @@
                                         style="width: 150px;">
                                         {{ number_format($grandTotals['tambah_material'] + $grandTotals['tambah_jasa'], 0, ',', '.') }}
                                     </td>
-
                                     <!-- KURANG Totals -->
                                     <td class="fi-ta-cell px-3 py-4 text-center text-sm font-bold text-danger-700 dark:text-danger-300 bg-danger-100 dark:bg-danger-400/20 border border-danger-200 dark:border-danger-600"
                                         style="width: 150px;">
@@ -443,14 +426,12 @@
                                         style="width: 150px;">
                                         {{ number_format($grandTotals['kurang_material'] + $grandTotals['kurang_jasa'], 0, ',', '.') }}
                                     </td>
-
                                     <td class="fi-ta-cell px-3 py-4" style="width: 80px;"></td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                 </div>
-
                 <!-- Footer info -->
                 <div
                     class="fi-section-content border-t border-gray-200 bg-gray-50/50 px-6 py-4 dark:border-white/10 dark:bg-white/5">
@@ -469,7 +450,6 @@
             </div>
         @endif
     </div>
-
     <!-- Section Grand Total REKON + PPN + Terbilang -->
     <div class="fi-section-content border-t border-gray-200 bg-white px-6 py-6 dark:border-white/10 dark:bg-gray-900">
         @php
@@ -478,7 +458,6 @@
             $rekonTotal = $rekonMaterial + $rekonJasa;
             $ppnValue = ($rekonTotal * $ppnPercent) / 100;
             $totalWithPpn = $rekonTotal + $ppnValue;
-
             function terbilang($angka)
             {
                 $angka = abs($angka);
@@ -523,7 +502,6 @@
                 return 'Angka terlalu besar';
             }
         @endphp
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800 dark:text-white">
             <!-- Kolom Kiri -->
             <div class="space-y-2">
@@ -538,7 +516,6 @@
                             {{ $ppnPercent }}%
                         </span>
                     </div>
-
                     <span>{{ number_format($ppnValue, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between border-t pt-2 border-gray-300 dark:border-white/10">
@@ -547,7 +524,6 @@
                         class="text-green-600 font-bold text-base">{{ number_format($totalWithPpn, 0, ',', '.') }}</span>
                 </div>
             </div>
-
             <!-- Kolom Kanan (Terbilang) -->
             <div class="space-y-2">
                 <label class="font-semibold">Terbilang:</label>

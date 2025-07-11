@@ -10,6 +10,7 @@ class BoqLine extends Model
         'mitra_pendaftaran_id',
         'nama_lokasi',
         'sto',
+        'id_project',
         'sp_material',
         'sp_jasa',
         'sp_total',

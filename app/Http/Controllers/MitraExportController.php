@@ -16,6 +16,7 @@ class MitraExportController extends Controller
         $data = MitraPendaftaran::findOrFail($id);
         $tanggalLegal = DateHelper::formatTanggalLengkap($data->tanggal_ba_legal);
         $tanggalRekon = DateHelper::formatTanggalLengkap($data->tanggal_ba_rekon);
+        
         return $this->generateWordDocument(
             templatePath: 'word/template-barekonmaterial.docx',
             fileName: "BA-REKON-MATERIAL-{$data->id}.docx",
@@ -180,22 +181,35 @@ class MitraExportController extends Controller
         array $specificData = [],
         string $datePrefix = ''
     ) {
-        $template = $this->createTemplate($templatePath, $data);
-        // Inject default values
-        $defaults = [
-            'no_ba_rekon' => $data->no_ba_rekon ?? '',
-            'tanggal_ba_rekon' => $data->tanggal_ba_rekon ?? '',
-        ];
-        $specificData = array_merge($defaults, $specificData);
-        foreach ($specificData as $key => $value) {
-            $template->setValue($key, $value);
-            $template->setValue("\${$key}", $value);
+        try {
+            $template = $this->createTemplate($templatePath, $data);
+            
+            // Inject default values with null safety
+            $defaults = [
+                'no_ba_rekon' => $data->no_ba_rekon ?? '',
+                'tanggal_ba_rekon' => $data->tanggal_ba_rekon ?? '',
+            ];
+            
+            $specificData = array_merge($defaults, $specificData);
+            
+            foreach ($specificData as $key => $value) {
+                $safeValue = $value ?? '';
+                $template->setValue($key, $safeValue);
+                $template->setValue("\${$key}", $safeValue);
+            }
+    
+            if ($datePrefix && !empty($tanggal)) {
+                $this->setDateTemplateData($template, $tanggal, $datePrefix);
+            }
+    
+            return $this->saveAndDownloadTemplate($template, $fileName);
+            
+        } catch (\Exception $e) {
+            error_log("Error in generateWordDocument: " . $e->getMessage());
+            return back()->with('error', 'Gagal membuat dokumen: ' . $e->getMessage());
         }
-        if ($datePrefix && !empty($tanggal)) {
-            $this->setDateTemplateData($template, $tanggal, $datePrefix);
-        }
-        return $this->saveAndDownloadTemplate($template, $fileName);
     }
+    
     public function exportTemplateRekonsiliasi($id)
     {
         $data = MitraPendaftaran::findOrFail($id);
@@ -239,55 +253,74 @@ class MitraExportController extends Controller
         $this->setDateTemplateData($template, $tanggal, 'rekon');
         return $this->saveAndDownloadTemplate($template, "Rekonsiliasi-FO-{$data->id}.docx");
     }
-        private function setDateTemplateData($template, $tanggal, string $suffix): void
-        {
-            if (is_string($tanggal)) {
-                $tanggalArray = explode(' ', $tanggal);
-                if (count($tanggalArray) >= 4) {
-                    $tanggal = [
-                        'hari' => $tanggalArray[0] ?? '',
-                        'tanggal' => $tanggalArray[1] ?? '',
-                        'bulan' => $tanggalArray[2] ?? '',
-                        'tahun' => $tanggalArray[3] ?? '',
-                        'tanggal_terbilang' => $this->numberToWords($tanggalArray[1] ?? ''),
-                        'tahun_terbilang' => $this->numberToWords($tanggalArray[3] ?? ''),
-                    ];
-                } else {
-                    $tanggal = [];
-                }
-            }
-            if (empty($tanggal)) return;
-            if (!isset($tanggal['format_tanggal_slash']) && isset($tanggal['tanggal'], $tanggal['bulan'], $tanggal['tahun'])) {
-                $tanggal['format_tanggal_slash'] = sprintf('%s/%s/%s',
-                    str_pad($tanggal['tanggal'], 2, '0', STR_PAD_LEFT),
-                    $this->convertBulanToNumber($tanggal['bulan']),
-                    $tanggal['tahun']
-                );
-            }
-            $terbilang = $tanggal['tanggal_terbilang'] ?? $tanggal['terbilang'] ?? '';
+    private function setDateTemplateData($template, $tanggal, string $suffix): void
+    {
+        // Add null check at the beginning
+        if (empty($tanggal)) {
+            // Set empty values for all date fields to prevent crashes
             $dateFields = [
-                'hari',
-                'bulan',
-                'tahun',
-                'tahun_terbilang',
-                'format_tanggal_slash',
+                'hari', 'tanggal', 'bulan', 'tahun', 'tahun_terbilang', 
+                'format_tanggal_slash', 'tanggal_terbilang'
             ];
+            
             foreach ($dateFields as $field) {
-                $value = $tanggal[$field] ?? '';
-                $template->setValue("{$field}_{$suffix}", $value);
-                $template->setValue("\${$field}_{$suffix}", $value);
+                $template->setValue("{$field}_{$suffix}", '');
+                $template->setValue("\${$field}_{$suffix}", '');
             }
-            $template->setValue("tanggal_{$suffix}", $tanggal['tanggal'] ?? '');
-            $template->setValue("\$tanggal_{$suffix}", $tanggal['tanggal'] ?? '');
-            $template->setValue("tanggal_terbilang_{$suffix}", $terbilang);
-            $template->setValue("\$tanggal_terbilang_{$suffix}", $terbilang);
-            $template->setValue("\${hari_rekon}", $tanggal['hari'] ?? '');
-            $template->setValue("\${tanggal_terbilang_rekon}", $terbilang);
-            $template->setValue("\${bulan_rekon}", $tanggal['bulan'] ?? '');
-            $template->setValue("\${tahun_terbilang_rekon}", $tanggal['tahun_terbilang'] ?? '');
-            $template->setValue("tanggal_ba_{$suffix}", $tanggal['tanggal'] ?? '');
-            $template->setValue("\$tanggal_ba_{$suffix}", $tanggal['tanggal'] ?? '');
+            return;
         }
+    
+        if (is_string($tanggal)) {
+            $tanggalArray = explode(' ', $tanggal);
+            if (count($tanggalArray) >= 4) {
+                $tanggal = [
+                    'hari' => $tanggalArray[0] ?? '',
+                    'tanggal' => $tanggalArray[1] ?? '',
+                    'bulan' => $tanggalArray[2] ?? '',
+                    'tahun' => $tanggalArray[3] ?? '',
+                    'tanggal_terbilang' => $this->numberToWords($tanggalArray[1] ?? ''),
+                    'tahun_terbilang' => $this->numberToWords($tanggalArray[3] ?? ''),
+                ];
+            } else {
+                // If format is unexpected, set empty values
+                $tanggal = [
+                    'hari' => '', 'tanggal' => '', 'bulan' => '', 'tahun' => '',
+                    'tanggal_terbilang' => '', 'tahun_terbilang' => ''
+                ];
+            }
+        }
+    
+        if (!isset($tanggal['format_tanggal_slash']) && isset($tanggal['tanggal'], $tanggal['bulan'], $tanggal['tahun'])) {
+            $tanggal['format_tanggal_slash'] = sprintf('%s/%s/%s',
+                str_pad($tanggal['tanggal'], 2, '0', STR_PAD_LEFT),
+                $this->convertBulanToNumber($tanggal['bulan']),
+                $tanggal['tahun']
+            );
+        }
+    
+        $terbilang = $tanggal['tanggal_terbilang'] ?? '';
+        $dateFields = [
+            'hari', 'bulan', 'tahun', 'tahun_terbilang', 'format_tanggal_slash',
+        ];
+    
+        foreach ($dateFields as $field) {
+            $value = $tanggal[$field] ?? '';
+            $template->setValue("{$field}_{$suffix}", $value);
+            $template->setValue("\${$field}_{$suffix}", $value);
+        }
+    
+        $template->setValue("tanggal_{$suffix}", $tanggal['tanggal'] ?? '');
+        $template->setValue("\$tanggal_{$suffix}", $tanggal['tanggal'] ?? '');
+        $template->setValue("tanggal_terbilang_{$suffix}", $terbilang);
+        $template->setValue("\$tanggal_terbilang_{$suffix}", $terbilang);
+        $template->setValue("\${hari_rekon}", $tanggal['hari'] ?? '');
+        $template->setValue("\${tanggal_terbilang_rekon}", $terbilang);
+        $template->setValue("\${bulan_rekon}", $tanggal['bulan'] ?? '');
+        $template->setValue("\${tahun_terbilang_rekon}", $tanggal['tahun_terbilang'] ?? '');
+        $template->setValue("tanggal_ba_{$suffix}", $tanggal['tanggal'] ?? '');
+        $template->setValue("\$tanggal_ba_{$suffix}", $tanggal['tanggal'] ?? '');
+    }
+
         private function convertBulanToNumber(string $bulan): string
 {
     $bulanMap = [
@@ -334,23 +367,41 @@ class MitraExportController extends Controller
         }
         return (string) $number;
     }
-private function createTemplate(string $templatePath, $data): TemplateProcessor
-{
-    $fullPath = resource_path($templatePath);
-    if (!file_exists($fullPath)) {
-        throw new \Exception("Template file not found: " . $fullPath);
+    private function createTemplate(string $templatePath, $data): TemplateProcessor
+    {
+        $fullPath = resource_path($templatePath);
+        if (!file_exists($fullPath)) {
+            throw new \Exception("Template file not found: " . $fullPath);
+        }
+    
+        $template = new TemplateProcessor($fullPath);
+        
+        // Add null safety for data
+        if (empty($data) || !isset($data->id)) {
+            throw new \Exception("Invalid data provided for template");
+        }
+    
+        try {
+            $droppedLocations = $this->getDroppedLocations($data->id);
+            $boqReplacements = $this->getBoqReplacements($data->id, self::PPN_PERCENT, $droppedLocations);
+            
+            foreach ($boqReplacements as $key => $value) {
+                // Add null safety for setValue
+                $safeValue = $value ?? '';
+                $template->setValue($key, $safeValue);
+                $template->setValue("\${$key}", $safeValue);
+            }
+            
+            $this->setBasicTemplateData($template, $data);
+            $this->setPersonnelTemplateData($template, $data);
+            
+        } catch (\Exception $e) {
+            // Log error but don't crash - set empty values instead
+            error_log("Error in createTemplate: " . $e->getMessage());
+        }
+    
+        return $template;
     }
-    $template = new TemplateProcessor($fullPath);
-    $droppedLocations = $this->getDroppedLocations($data->id);
-    $boqReplacements = $this->getBoqReplacements($data->id, self::PPN_PERCENT, $droppedLocations);
-    foreach ($boqReplacements as $key => $value) {
-        $template->setValue($key, $value);
-        $template->setValue("\${$key}", $value);
-    }
-    $this->setBasicTemplateData($template, $data);
-    $this->setPersonnelTemplateData($template, $data);
-    return $template;
-}
     private function saveAndDownloadTemplate(TemplateProcessor $template, string $fileName)
     {
         $exportPath = storage_path("app/public/{$fileName}");
@@ -418,11 +469,23 @@ private function setPersonnelTemplateData(TemplateProcessor $template, $data): v
             $row++;
         }
     }
-    private function formatTanggalLengkap(?array $tanggal): string
-    {
-        if (empty($tanggal)) return '';
+private function formatTanggalLengkap($tanggal): string
+{
+    if (empty($tanggal)) return '';
+    
+    // Handle if tanggal is already a string
+    if (is_string($tanggal)) {
+        return $tanggal;
+    }
+    
+    // Handle if tanggal is an array
+    if (is_array($tanggal)) {
         return "{$tanggal['tanggal']} {$tanggal['bulan']} {$tanggal['tahun']}";
     }
+    
+    return '';
+}
+
     protected function getBoqReplacements($mitraId, $ppnPercent = self::PPN_PERCENT, $droppedLocations = []): array
     {
         $boqs = BoqLine::where('mitra_pendaftaran_id', $mitraId)->get();
@@ -665,21 +728,13 @@ private function setPersonnelTemplateData(TemplateProcessor $template, $data): v
         if (is_null($angka) || !is_numeric($angka)) {
             return 'Nol';
         }
+        
         $angka = abs((int) $angka);
         $huruf = [
-            '',
-            'Satu',
-            'Dua',
-            'Tiga',
-            'Empat',
-            'Lima',
-            'Enam',
-            'Tujuh',
-            'Delapan',
-            'Sembilan',
-            'Sepuluh',
-            'Sebelas'
+            '', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 
+            'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'
         ];
+    
         if ($angka < 12) {
             return $huruf[$angka];
         } elseif ($angka < 20) {
@@ -701,49 +756,113 @@ private function setPersonnelTemplateData(TemplateProcessor $template, $data): v
         } elseif ($angka < 1000000000000000) {
             return $this->terbilang(intval($angka / 1000000000000)) . ' Triliun ' . $this->terbilang($angka % 1000000000000);
         }
-        return trim(preg_replace('/\s+/', ' ', ''));
+        
+        // Fix the trim issue at the end
+        return 'Nol';
     }
     public function exportAllWord($id)
     {
-        $mitra = MitraPendaftaran::findOrFail($id);
-        $zipFileName = 'All Word Documents_' . str_replace('/', '_', $mitra->nomer_sp_mitra) . '_' . str_replace(' ', '_', $mitra->nama_pekerjaan) . '.zip';
-        $tempDir = storage_path('app/temp/wordexports_' . $id . '_' . time());
-        if (!file_exists($tempDir)) {
-            mkdir($tempDir, 0755, true);
-        }
         try {
-            $documents = [
-                'BAUT' => $this->generateBautDocument($mitra),
-                'BA_ABD' => $this->generateBaAbdDocument($mitra),
-                'BA_Legal' => $this->generateBaLegalDocument($mitra),
-                'BA_Rekon' => $this->generateBaRekonDocument($mitra),
-                'Pernyataan_Material' => $this->generatePernyataanMaterialDocument($mitra),
-                'BAST' => $this->generateBastDocument($mitra),
-                'Pemotongan_Tagihan' => $this->generatePemotonganTagihanDocument($mitra),
-                'Barekon_Material' => $this->generatebarekonmaterialDocument($mitra),
-            ];
-            foreach ($documents as $name => $document) {
-                $fileName = $name . '_' . str_replace(' ', '_', $mitra->nama_perusahaan) . '.docx';
-                $filePath = $tempDir . '/' . $fileName;
-                $document->saveAs($filePath);
+            $mitra = MitraPendaftaran::findOrFail($id);
+            
+            // Add null safety for mitra properties
+            $spMitra = $mitra->nomer_sp_mitra ?? 'Unknown';
+            $namaPekerjaan = $mitra->nama_pekerjaan ?? 'Unknown';
+            $namaPerusahaan = $mitra->nama_perusahaan ?? $mitra->nama_mitra ?? 'Unknown';
+            
+            $zipFileName = 'All_Word_Documents_' . str_replace(['/', ' '], '_', $spMitra) . '_' . str_replace(' ', '_', $namaPekerjaan) . '.zip';
+            $tempDir = storage_path('app/temp/wordexports_' . $id . '_' . time());
+            
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
             }
+    
+            $documents = [];
+            
+            // Generate documents with error handling
+            try {
+                $documents['BAUT'] = $this->generateBautDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate BAUT document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['BA_ABD'] = $this->generateBaAbdDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate BA_ABD document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['BA_Legal'] = $this->generateBaLegalDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate BA_Legal document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['BA_Rekon'] = $this->generateBaRekonDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate BA_Rekon document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['Pernyataan_Material'] = $this->generatePernyataanMaterialDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate Pernyataan_Material document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['BAST'] = $this->generateBastDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate BAST document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['Pemotongan_Tagihan'] = $this->generatePemotonganTagihanDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate Pemotongan_Tagihan document: " . $e->getMessage());
+            }
+            
+            try {
+                $documents['Barekon_Material'] = $this->generatebarekonmaterialDocument($mitra);
+            } catch (\Exception $e) {
+                error_log("Failed to generate Barekon_Material document: " . $e->getMessage());
+            }
+    
+            // Save documents that were successfully generated
+            foreach ($documents as $name => $document) {
+                if ($document) {
+                    $fileName = $name . '_' . str_replace(' ', '_', $namaPerusahaan) . '.docx';
+                    $filePath = $tempDir . '/' . $fileName;
+                    $document->saveAs($filePath);
+                }
+            }
+    
+            // Create ZIP
             $zipPath = $tempDir . '/' . $zipFileName;
             $zip = new ZipArchive();
+            
             if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
                 $files = glob($tempDir . '/*.docx');
                 foreach ($files as $file) {
                     $zip->addFile($file, basename($file));
                 }
                 $zip->close();
+                
                 return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Failed to create ZIP file');
             }
+            
         } catch (\Exception $e) {
-            $this->cleanupTempDirectory($tempDir);
-            throw $e;
+            if (isset($tempDir)) {
+                $this->cleanupTempDirectory($tempDir);
+            }
+            
+            error_log("Error in exportAllWord: " . $e->getMessage());
+            return back()->with('error', 'Gagal membuat file ZIP: ' . $e->getMessage());
         }
-        $this->cleanupTempDirectory($tempDir);
-        return back()->with('error', 'Gagal membuat file ZIP');
     }
+    
     private function generatebarekonmaterialDocument($mitra)
     {
         $tanggal = DateHelper::formatTanggalLengkap($mitra->tanggal_ba_legal);

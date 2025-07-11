@@ -117,8 +117,8 @@ class ExcelExportController extends Controller
             'date_field' => 'tanggal_ba_rekon',
             'prefix' => 'rekon'
         ],
-        'baperformansidanlampiranbarekongamas' => [
-            'template' => 'template-baperformansidanlampiranbarekongamas.xlsx',
+        'resumebarekon' => [
+            'template' => 'template-resumebarekon.xlsx',
             'date_field' => 'tanggal_ba_rekon',
             'prefix' => 'rekon'
         ],
@@ -396,7 +396,9 @@ class ExcelExportController extends Controller
         $result = [
             "no_{$row}" => $row,
             "nama_lokasi_{$row}" => $boq->nama_lokasi ?? '-',
-            "sto_{$row}" => $boq->sto ?? '-'
+            "sto_{$row}" => $boq->sto ?? '-',
+            "id_project_{$row}" => $boq->id_project ?? '-'
+            
         ];
         foreach ($fields as $field) {
             foreach ($components as $component) {
@@ -470,7 +472,7 @@ class ExcelExportController extends Controller
     }
     private function fillEmptyBoqRows(&$result, $actualCount)
     {
-        $fields = ['nama_lokasi', 'sto', 'sp_material', 'sp_jasa', 'sp_total', 
+        $fields = ['nama_lokasi', 'sto', 'id_project', 'sp_material', 'sp_jasa', 'sp_total', 
                   'rekon_material', 'rekon_jasa', 'rekon_total', 'tambah_material', 
                   'tambah_jasa', 'tambah_total', 'kurang_material', 'kurang_jasa', 'kurang_total'];
         for ($i = $actualCount + 1; $i <= self::MAX_BOQ_ROWS; $i++) {
@@ -547,12 +549,12 @@ public function exportLampiranbarekontambahkurang($id, Request $request = null)
     }
     return $this->exportTemplate($id, 'lampiranbarekontambahkurang', $request);
 }
-public function exportBaperformansidanlampiranbarekongamas($id, Request $request = null)
+public function exportResumeBarekon($id, Request $request = null)
 {
     if ($request && $request->isMethod('post')) {
-        return $this->exportTemplate($id, 'baperformansidanlampiranbarekongamas', $request);
+        return $this->exportTemplate($id, 'resumebarekon', $request);
     }
-    return $this->exportTemplate($id, 'baperformansidanlampiranbarekongamas', $request);
+    return $this->exportTemplate($id, 'resumebarekon', $request);
 }
     private function exportAndSave($id, $type, $savePath)
     {
@@ -592,7 +594,7 @@ public function exportBaperformansidanlampiranbarekongamas($id, Request $request
                 'baqclulus' => 'Excel_BAQ_Clulus',
                 'pemotongantagihan' => 'Excel_Pemotongan_Tagihan',
                 'lampiranbarekontambahkurang' => 'Excel_Lampiran_BA_Rekon_Tambah_Kurang',
-                'baperformansidanlampiranbarekongamas' => 'Excel_BA_Performansi_Dan_Lampiran_BA_Rekon_Gamas',
+                'resumebarekon' => 'Excel_Resume_BA_Rekon',
             ];
             foreach ($exports as $type => $filenamePrefix) {
                 $targetFileName = $filenamePrefix . '_' . str_replace(' ', '_', $mitra->nama_perusahaan) . '.xlsx';
